@@ -83,4 +83,51 @@ export const globalStyles = StyleSheet.create({
 		color: 'red',
 		marginBottom: 10,
 	},
+	progressContainer: {
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginBottom: 30,
+	},
+	timerText: {
+		position: 'absolute',
+		fontSize: 48,
+		fontWeight: 'bold',
+		color: colors.darkIcon,
+	},
+	stageText: {
+		textAlign: 'center',
+		color: colors.darkIcon,
+		fontSize: 18,
+		marginBottom: 20,
+	},
+	stageProgress: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginBottom: 30,
+	},
+	stageDot: {
+		width: 15,
+		height: 15,
+		borderRadius: 15 / 2,
+		backgroundColor: colors.cerulean,
+		marginHorizontal: 5,
+	},
+	stageDotCompleted: {
+		backgroundColor: colors.prussianBlue,
+	},
+	label: {
+		color: colors.darkIcon,
+		fontSize: 16,
+		marginVertical: 8,
+	},
+	durationContainer: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		marginBottom: 15,
+	},
+	durationInput: {
+		flex: 1,
+		marginHorizontal: 5,
+	},
 });

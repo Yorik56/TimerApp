@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { colors, globalStyles } from '../styles';
 
 export default function TimerScreen({ route, navigation }) {
@@ -16,6 +16,17 @@ export default function TimerScreen({ route, navigation }) {
 	// Calcul de la progression pour le cercle
 	const totalTime = isWorking ? workTime : restTime;
 	const progress = ((totalTime - timeLeft) / totalTime) * 100;
+
+	// Fonction pour convertir les secondes en heures, minutes, secondes
+	const formatTime = (seconds) => {
+		const hrs = Math.floor(seconds / 3600);
+		const mins = Math.floor((seconds % 3600) / 60);
+		const secs = seconds % 60;
+		return `${hrs > 0 ? `${hrs}:` : ''}${String(mins).padStart(2, '0')}:${String(secs).padStart(
+			2,
+			'0'
+		)}`;
+	};
 
 	useEffect(() => {
 		if (currentCycle > cycles) {
@@ -61,8 +72,9 @@ export default function TimerScreen({ route, navigation }) {
 
 	return (
 		<View style={globalStyles.container}>
-			<View style={styles.progressContainer}>
+			<View style={globalStyles.progressContainer}>
 				<Svg width={200} height={200} viewBox="0 0 100 100">
+					{/* Cercle de fond */}
 					<Circle
 						cx="50"
 						cy="50"
@@ -71,6 +83,7 @@ export default function TimerScreen({ route, navigation }) {
 						strokeWidth="8"
 						fill="none"
 					/>
+					{/* Cercle de progression */}
 					<Circle
 						cx="50"
 						cy="50"
@@ -82,21 +95,31 @@ export default function TimerScreen({ route, navigation }) {
 						strokeDashoffset={283 - (progress / 100) * 283}
 						strokeLinecap="round"
 					/>
+					{/* Temps restant */}
+					<SvgText
+						x="50%"
+						y="50%"
+						dy=".3em"
+						textAnchor="middle"
+						fontSize="10"
+						fill={colors.darkIcon}
+					>
+						{formatTime(timeLeft)}
+					</SvgText>
 				</Svg>
-				<Text style={styles.timerText}>{timeLeft}s</Text>
 			</View>
 
-			<Text style={styles.stageText}>
+			<Text style={globalStyles.stageText}>
 				{isWorking ? 'Travail' : 'Repos'} (Cycle {currentCycle}/{cycles})
 			</Text>
 
-			<View style={styles.stageProgress}>
+			<View style={globalStyles.stageProgress}>
 				{Array.from({ length: cycles }).map((_, index) => (
 					<View
 						key={index}
 						style={[
-							styles.stageDot,
-							index < currentCycle - 1 ? styles.stageDotCompleted : null,
+							globalStyles.stageDot,
+							index < currentCycle - 1 ? globalStyles.stageDotCompleted : null,
 						]}
 					/>
 				))}
@@ -135,39 +158,3 @@ export default function TimerScreen({ route, navigation }) {
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	progressContainer: {
-		alignItems: 'center',
-		justifyContent: 'center',
-		marginBottom: 30,
-	},
-	timerText: {
-		position: 'absolute',
-		fontSize: 48,
-		fontWeight: 'bold',
-		color: colors.darkIcon,
-	},
-	stageText: {
-		textAlign: 'center',
-		color: colors.darkIcon,
-		fontSize: 18,
-		marginBottom: 20,
-	},
-	stageProgress: {
-		flexDirection: 'row',
-		justifyContent: 'center',
-		alignItems: 'center',
-		marginBottom: 30,
-	},
-	stageDot: {
-		width: 15,
-		height: 15,
-		borderRadius: 15 / 2,
-		backgroundColor: colors.cerulean,
-		marginHorizontal: 5,
-	},
-	stageDotCompleted: {
-		backgroundColor: colors.prussianBlue,
-	},
-});

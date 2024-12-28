@@ -5,8 +5,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, globalStyles } from '../styles';
 
 export default function ConfigScreen({ route, navigation }) {
-	const [workTime, setWorkTime] = useState(30);
-	const [restTime, setRestTime] = useState(10);
+	const [workHours, setWorkHours] = useState(0);
+	const [workMinutes, setWorkMinutes] = useState(0);
+	const [workSeconds, setWorkSeconds] = useState(30);
+	const [restHours, setRestHours] = useState(0);
+	const [restMinutes, setRestMinutes] = useState(0);
+	const [restSeconds, setRestSeconds] = useState(10);
 	const [cycles, setCycles] = useState(5);
 	const [programName, setProgramName] = useState('');
 	const [editingProgram, setEditingProgram] = useState(null);
@@ -15,13 +19,22 @@ export default function ConfigScreen({ route, navigation }) {
 	useEffect(() => {
 		if (route.params?.program) {
 			const { name, workTime, restTime, cycles } = route.params.program;
+
 			setProgramName(name);
-			setWorkTime(workTime);
-			setRestTime(restTime);
+			setWorkHours(Math.floor(workTime / 3600));
+			setWorkMinutes(Math.floor((workTime % 3600) / 60));
+			setWorkSeconds(workTime % 60);
+			setRestHours(Math.floor(restTime / 3600));
+			setRestMinutes(Math.floor((restTime % 3600) / 60));
+			setRestSeconds(restTime % 60);
 			setCycles(cycles);
 			setEditingProgram(route.params.program);
 		}
 	}, [route.params]);
+
+	const calculateTotalSeconds = (hours, minutes, seconds) => {
+		return hours * 3600 + minutes * 60 + seconds;
+	};
 
 	const saveProgram = async () => {
 		if (!programName.trim()) {
@@ -30,6 +43,10 @@ export default function ConfigScreen({ route, navigation }) {
 		}
 
 		setError('');
+
+		const workTime = calculateTotalSeconds(workHours, workMinutes, workSeconds);
+		const restTime = calculateTotalSeconds(restHours, restMinutes, restSeconds);
+
 		const newProgram = { name: programName.trim(), workTime, restTime, cycles };
 
 		try {
@@ -45,8 +62,12 @@ export default function ConfigScreen({ route, navigation }) {
 
 			await AsyncStorage.setItem('programs', JSON.stringify(programs));
 			setProgramName('');
-			setWorkTime(30);
-			setRestTime(10);
+			setWorkHours(0);
+			setWorkMinutes(0);
+			setWorkSeconds(30);
+			setRestHours(0);
+			setRestMinutes(0);
+			setRestSeconds(10);
 			setCycles(5);
 
 			navigation.navigate('Home', { updated: true });
@@ -56,6 +77,9 @@ export default function ConfigScreen({ route, navigation }) {
 	};
 
 	const handleStart = () => {
+		const workTime = calculateTotalSeconds(workHours, workMinutes, workSeconds);
+		const restTime = calculateTotalSeconds(restHours, restMinutes, restSeconds);
+
 		navigation.navigate('Timer', { workTime, restTime, cycles });
 	};
 
@@ -63,7 +87,7 @@ export default function ConfigScreen({ route, navigation }) {
 		<View style={globalStyles.container}>
 			<Text style={globalStyles.title}>Configurer votre Timer</Text>
 
-			<View >
+			<View>
 				<TextInput
 					label="Nom du Programme"
 					mode="outlined"
@@ -78,24 +102,62 @@ export default function ConfigScreen({ route, navigation }) {
 				/>
 				{error ? <Text style={globalStyles.errorText}>{error}</Text> : null}
 
-				<TextInput
-					label="Durée de Travail (sec)"
-					mode="outlined"
-					keyboardType="numeric"
-					value={String(workTime)}
-					onChangeText={(text) => setWorkTime(Number(text))}
-					outlineStyle={globalStyles.outlineStyle}
-					style={globalStyles.input}
-				/>
-				<TextInput
-					label="Durée de Pause (sec)"
-					mode="outlined"
-					keyboardType="numeric"
-					value={String(restTime)}
-					onChangeText={(text) => setRestTime(Number(text))}
-					outlineStyle={globalStyles.outlineStyle}
-					style={globalStyles.input}
-				/>
+				<Text style={globalStyles.label}>Durée de Travail</Text>
+				<View style={globalStyles.durationContainer}>
+					<TextInput
+						label="Heures"
+						mode="outlined"
+						keyboardType="numeric"
+						value={String(workHours)}
+						onChangeText={(text) => setWorkHours(Number(text))}
+						style={globalStyles.durationInput}
+					/>
+					<TextInput
+						label="Minutes"
+						mode="outlined"
+						keyboardType="numeric"
+						value={String(workMinutes)}
+						onChangeText={(text) => setWorkMinutes(Number(text))}
+						style={globalStyles.durationInput}
+					/>
+					<TextInput
+						label="Secondes"
+						mode="outlined"
+						keyboardType="numeric"
+						value={String(workSeconds)}
+						onChangeText={(text) => setWorkSeconds(Number(text))}
+						style={globalStyles.durationInput}
+					/>
+				</View>
+
+				<Text style={globalStyles.label}>Durée de Pause</Text>
+				<View style={globalStyles.durationContainer}>
+					<TextInput
+						label="Heures"
+						mode="outlined"
+						keyboardType="numeric"
+						value={String(restHours)}
+						onChangeText={(text) => setRestHours(Number(text))}
+						style={globalStyles.durationInput}
+					/>
+					<TextInput
+						label="Minutes"
+						mode="outlined"
+						keyboardType="numeric"
+						value={String(restMinutes)}
+						onChangeText={(text) => setRestMinutes(Number(text))}
+						style={globalStyles.durationInput}
+					/>
+					<TextInput
+						label="Secondes"
+						mode="outlined"
+						keyboardType="numeric"
+						value={String(restSeconds)}
+						onChangeText={(text) => setRestSeconds(Number(text))}
+						style={globalStyles.durationInput}
+					/>
+				</View>
+
 				<TextInput
 					label="Nombre de Cycles"
 					mode="outlined"
