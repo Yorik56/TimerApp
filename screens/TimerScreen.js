@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Text, Button, IconButton, Card } from 'react-native-paper';
 
 export default function TimerScreen({ route, navigation }) {
 	const { workTime, restTime, cycles } = route.params;
@@ -56,16 +57,40 @@ export default function TimerScreen({ route, navigation }) {
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>
-				{isWorking ? 'Travail' : 'Repos'} (Cycle {currentCycle}/{cycles})
-			</Text>
-			<Text style={styles.timer}>{timeLeft}s</Text>
+			<Card style={styles.card}>
+				<Card.Content>
+					<Text style={styles.title}>
+						{isWorking ? 'Travail' : 'Repos'} (Cycle {currentCycle}/{cycles})
+					</Text>
+					<Text style={styles.timer}>{timeLeft}s</Text>
+				</Card.Content>
+			</Card>
 
 			<View style={styles.buttonContainer}>
-				<Button title={isPaused ? 'Reprendre' : 'Pause'} onPress={handlePauseResume} />
-				<Button title="Reset Étape" onPress={resetStep} />
-				<Button title="Reset Programme" onPress={resetProgram} />
-				<Button title="Stop" onPress={() => navigation.goBack()} />
+				<IconButton
+					icon={isPaused ? 'play' : 'pause'}
+					size={36}
+					onPress={handlePauseResume}
+					style={styles.iconButton}
+				/>
+				<IconButton
+					icon="refresh"
+					size={36}
+					onPress={resetStep}
+					style={styles.iconButton}
+				/>
+				<IconButton
+					icon="restart"
+					size={36}
+					onPress={resetProgram}
+					style={styles.iconButton}
+				/>
+				<IconButton
+					icon="stop"
+					size={36}
+					onPress={() => navigation.goBack()}
+					style={styles.iconButtonStop}
+				/>
 			</View>
 		</View>
 	);
@@ -76,19 +101,33 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: 'center',
 		alignItems: 'center',
+		backgroundColor: '#f5f5f5',
+	},
+	card: {
+		width: '90%',
+		marginBottom: 20,
+		elevation: 4,
 	},
 	title: {
 		fontSize: 24,
-		marginBottom: 20,
+		textAlign: 'center',
+		marginBottom: 10,
 	},
 	timer: {
 		fontSize: 48,
 		fontWeight: 'bold',
-		marginBottom: 20,
+		textAlign: 'center',
 	},
 	buttonContainer: {
 		flexDirection: 'row',
 		justifyContent: 'space-around',
-		width: '80%',
+		width: '90%',
+		marginTop: 20,
+	},
+	iconButton: {
+		backgroundColor: '#6200ee',
+	},
+	iconButtonStop: {
+		backgroundColor: '#d32f2f',
 	},
 });

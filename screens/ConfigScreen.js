@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
+import { Text, TextInput, Button, Card, IconButton } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ConfigScreen({ navigation }) {
@@ -8,14 +9,13 @@ export default function ConfigScreen({ navigation }) {
 	const [cycles, setCycles] = useState(5);
 	const [programName, setProgramName] = useState('');
 	const [savedPrograms, setSavedPrograms] = useState([]);
-	const [editingProgram, setEditingProgram] = useState(null); // Programme en cours de modification
-	const [error, setError] = useState(''); // État pour gérer les erreurs
+	const [editingProgram, setEditingProgram] = useState(null);
+	const [error, setError] = useState('');
 
 	useEffect(() => {
 		loadPrograms();
 	}, []);
 
-	// Charger les programmes sauvegardés
 	const loadPrograms = async () => {
 		try {
 			const currentPrograms = await AsyncStorage.getItem('programs');
@@ -25,14 +25,13 @@ export default function ConfigScreen({ navigation }) {
 		}
 	};
 
-	// Sauvegarder un nouveau programme ou en modifier un existant
 	const saveProgram = async () => {
 		if (!programName.trim()) {
 			setError('Veuillez entrer un nom pour le programme.');
 			return;
 		}
 
-		setError(''); // Réinitialise l'erreur si tout est correct
+		setError('');
 
 		const newProgram = { name: programName.trim(), workTime, restTime, cycles };
 
@@ -41,11 +40,9 @@ export default function ConfigScreen({ navigation }) {
 			let programs = currentPrograms ? JSON.parse(currentPrograms) : [];
 
 			if (editingProgram) {
-				// Remplacer le programme existant
 				programs = programs.map((p) => (p.name === editingProgram.name ? newProgram : p));
-				setEditingProgram(null); // Réinitialiser le mode édition
+				setEditingProgram(null);
 			} else {
-				// Ajouter un nouveau programme
 				programs.push(newProgram);
 			}
 
@@ -57,7 +54,6 @@ export default function ConfigScreen({ navigation }) {
 		}
 	};
 
-	// Charger un programme dans les champs pour modification
 	const editProgram = (program) => {
 		setProgramName(program.name);
 		setWorkTime(program.workTime);
@@ -66,7 +62,6 @@ export default function ConfigScreen({ navigation }) {
 		setEditingProgram(program);
 	};
 
-	// Supprimer un programme
 	const deleteProgram = async (programName) => {
 		try {
 			const currentPrograms = await AsyncStorage.getItem('programs');
@@ -79,7 +74,6 @@ export default function ConfigScreen({ navigation }) {
 		}
 	};
 
-	// Démarrer le timer avec la configuration actuelle
 	const handleStart = () => {
 		navigation.navigate('Timer', { workTime, restTime, cycles });
 	};
@@ -88,48 +82,58 @@ export default function ConfigScreen({ navigation }) {
 		<View style={styles.container}>
 			<Text style={styles.label}>Nom du Programme</Text>
 			<TextInput
-				style={[styles.input, error ? styles.inputError : null]} // Ajout du style rouge si erreur
+				label="Nom du Programme"
+				mode="outlined"
 				value={programName}
 				onChangeText={setProgramName}
-				placeholder="Exemple : Cardio Intense"
+				error={!!error}
 			/>
-			{error ? <Text style={styles.errorText}>{error}</Text> : null} {/* Message d'erreur */}
-			<Text style={styles.label}>Durée de Travail (sec)</Text>
+			{error ? <Text style={styles.errorText}>{error}</Text> : null}
+
 			<TextInput
-				style={styles.input}
+				label="Durée de Travail (sec)"
+				mode="outlined"
 				keyboardType="numeric"
 				value={String(workTime)}
 				onChangeText={(text) => setWorkTime(Number(text))}
 			/>
-			<Text style={styles.label}>Durée de Pause (sec)</Text>
 			<TextInput
-				style={styles.input}
+				label="Durée de Pause (sec)"
+				mode="outlined"
 				keyboardType="numeric"
 				value={String(restTime)}
 				onChangeText={(text) => setRestTime(Number(text))}
 			/>
-			<Text style={styles.label}>Nombre de Cycles</Text>
 			<TextInput
-				style={styles.input}
+				label="Nombre de Cycles"
+				mode="outlined"
 				keyboardType="numeric"
 				value={String(cycles)}
 				onChangeText={(text) => setCycles(Number(text))}
 			/>
-			<Button title={editingProgram ? "Modifier le Programme" : "Sauvegarder le Programme"} onPress={saveProgram} />
-			<Button title="Démarrer le Timer" onPress={handleStart} />
 
-			<Text style={styles.savedProgramsTitle}>Programmes Sauvegardés</Text>
+			<Button mode="contained" onPress={saveProgram} icon="content-save">
+				{editingProgram ? 'Modifier le Programme' : 'Sauvegarder le Programme'}
+			</Button>
+			<Button mode="contained" onPress={handleStart} style={styles.button} icon="play-circle">
+				Démarrer le Timer
+			</Button>
+
 			<FlatList
 				data={savedPrograms}
 				keyExtractor={(item, index) => index.toString()}
 				renderItem={({ item }) => (
-					<View style={styles.programItemContainer}>
-						<TouchableOpacity onPress={() => editProgram(item)} style={styles.programItem}>
-							<Text>{item.name}</Text>
-						</TouchableOpacity>
-						<Button title="Supprimer" color="red" onPress={() => deleteProgram(item.name)} />
-						<Button title="Démarrer" onPress={() => navigation.navigate('Timer', item)} />
-					</View>
+					<Card style={styles.card}>
+						<Card.Title
+							title={item.name}
+							right={() => (
+								<>
+									<IconButton icon="pencil" onPress={() => editProgram(item)} />
+									<IconButton icon="delete" onPress={() => deleteProgram(item.name)} />
+								</>
+							)}
+						/>
+					</Card>
 				)}
 			/>
 		</View>
@@ -140,45 +144,19 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		padding: 20,
-		justifyContent: 'center',
 	},
 	label: {
 		fontSize: 16,
 		marginVertical: 10,
 	},
-	input: {
-		borderWidth: 1,
-		borderColor: '#ccc',
-		padding: 10,
-		fontSize: 16,
-		borderRadius: 5,
-		marginBottom: 20,
+	button: {
+		marginTop: 20,
 	},
-	inputError: {
-		borderColor: 'red',
+	card: {
+		marginVertical: 10,
 	},
 	errorText: {
 		color: 'red',
-		fontSize: 14,
 		marginBottom: 10,
-	},
-	savedProgramsTitle: {
-		fontSize: 18,
-		marginTop: 30,
-		marginBottom: 10,
-		fontWeight: 'bold',
-	},
-	programItemContainer: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		marginBottom: 10,
-	},
-	programItem: {
-		flex: 1,
-		padding: 10,
-		backgroundColor: '#f0f0f0',
-		borderRadius: 5,
-		marginRight: 10,
 	},
 });
