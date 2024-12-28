@@ -4,7 +4,7 @@
   <img src="https://reactnative.dev/img/header_logo.svg" alt="React Native" height="80"/>
   <img src="https://cdn.worldvectorlogo.com/logos/expo-1.svg" alt="Expo" height="80" style="margin: 0 20px;"/>
   <img src="https://nodejs.org/static/images/logo.svg" alt="Node.js" height="80"/>
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Yarn-logo-kitten.svg/512px-Yarn-logo-kitten.svg.png?20220521160407" alt="Yarn" height="80" style="margin: 0 20px;"/>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Yarn-logo-kitten.svg/512px-Yarn-logo-kitten.svg.png" alt="Yarn" height="80" style="margin: 0 20px;"/>
 </p>
 
 <p align="center">
@@ -28,6 +28,8 @@
   </a>
 </p>
 
+---
+
 ### Points forts :
 
 - **Cycles personnalisables** : Définissez la durée du travail, du repos et le nombre de cycles.
@@ -35,7 +37,9 @@
 - **Thème sombre intégré** : Un design moderne et agréable pour les yeux.
 - **Compatible multi-plateforme** : Fonctionne sans problème sur Android et iOS.
 
-## Fonctionnalités
+---
+
+### Fonctionnalités :
 
 - **Intervalles personnalisables** : Définissez la durée du travail, du repos et le nombre de cycles.
 - **Notifications sonores** : Jouez des alertes personnalisées pendant les transitions.
@@ -45,21 +49,22 @@
 - **Multi-plateforme** : Compatible Android et iOS avec un seul code.
 - **Minuterie en temps réel** : Compte à rebours visuel et suivi des cycles pendant les sessions actives.
 
+---
+
 ## Technologies utilisées
 
 - **React Native** : Développement mobile multiplateforme.
 - **Expo** : Simplifie le développement et le processus de build.
 - **React Navigation** : Pour une navigation fluide entre les écrans de configuration et de minuterie.
 
-## Pré-requis
+---
 
-Avant de configurer le projet, assurez-vous d'avoir installé:
+## Pré-requis
 
 ### Node.js
 
-- **Version** : Le projet a été testé avec **Node.js v22.12.0**. Cependant, en raison de problèmes de compatibilité avec
-  l'ancien CLI d'Expo, nous recommandons **Node.js v14–16**.
-- Pour changer de version de Node.js, utilisez un gestionnaire de versions comme [NVM](https://github.com/nvm-sh/nvm):
+- **Version** : Le projet utilise **Node.js v16.x**.
+- Utilisez un gestionnaire comme [NVM](https://github.com/nvm-sh/nvm) pour changer de version :
   ```bash
   nvm install 16
   nvm use 16
@@ -68,21 +73,21 @@ Avant de configurer le projet, assurez-vous d'avoir installé:
 ### Yarn (Recommandé)
 
 - **Version** : Yarn 1.x ou 2.x
-- Installez-le globalement:
+- Installez Yarn globalement :
   ```bash
   npm install -g yarn
   ```
 
 ### Expo CLI
 
-- Installez le nouveau CLI localement dans le projet:
+- Installez Expo CLI localement dans le projet :
   ```bash
   npx create-expo-app
   ```
 
-## Installation et configuration
+---
 
-### Étapes pour exécuter l'application
+## Installation et configuration
 
 1. **Clonez le dépôt** :
    ```bash
@@ -93,76 +98,44 @@ Avant de configurer le projet, assurez-vous d'avoir installé:
 2. **Installez les dépendances** :
    ```bash
    yarn install
-   # Ou avec npm :
-   npm install
    ```
 
 3. **Lancez le serveur de développement** :
    ```bash
    yarn start
-   # Ou avec npm :
-   npm run start
    ```
 
 4. **Lancez l'application** :
-	- Utilisez l'application Expo Go pour scanner le QR code affiché dans votre terminal (Android/iOS).
-	- Ou ouvrez l'application dans un émulateur:
+	- Scannez le QR code dans Expo Go (Android/iOS).
+	- Ou ouvrez dans un émulateur :
 	  ```bash
-	  yarn android  # Pour Android
-	  yarn ios      # Pour iOS (nécessite macOS)
-	  yarn web      # Exécute dans un navigateur
+	  yarn android
+	  yarn ios      # Nécessite macOS
+	  yarn web
 	  ```
+
+---
 
 ## Compilation pour la production
 
-### **APK Android** :
+### APK Android
 
-1. Compilez l'APK:
+1. Compilez l'APK :
    ```bash
    expo build:android
    ```
-2. Suivez les instructions pour télécharger le fichier APK.
 
-### **Build iOS** :
+2. Téléchargez l'APK via Expo.
 
-1. Compilez l'application iOS:
+### iOS Build
+
+1. Compilez pour iOS :
    ```bash
    expo build:ios
    ```
-2. Nécessite un compte développeur Apple pour générer et télécharger le fichier `.ipa`.
+2. Nécessite un compte développeur Apple pour générer le fichier `.ipa`.
 
-### **EAS Build** (Recommandé) :
-
-Utilisez **EAS Build** d'Expo pour une solution moderne et flexible:
-
-```bash
-eas build
-```
-
-Suivez [le guide d'Expo](https://docs.expo.dev/build/introduction/) pour la configuration.
-
-## Dépannage
-
-### Problèmes courants
-
-1. **Erreur Metro Bundler** :
-	- Assurez-vous d'avoir la bonne version de React Native installée.
-	- Réinitialisez le cache Metro:
-	  ```bash
-	  yarn start --reset-cache
-	  ```
-
-2. **Problème de version de Node** :
-	- Utilisez Node.js v14–16 pour l'ancien CLI d'Expo ou migrez vers le nouveau CLI:
-	  ```bash
-	  npx create-expo-app
-	  ```
-
-3. **Erreur avec StyleSheet** :
-	- Assurez-vous que `react-native-web` est correctement installé si vous ciblez le web:
-	  ```bash
-	  yarn add react-native-web
-	  ```
+---
 
 ## Structure du projet
 
@@ -170,30 +143,34 @@ Suivez [le guide d'Expo](https://docs.expo.dev/build/introduction/) pour la conf
 TimerApp/
 │
 ├── App.js                    # Point d'entrée
-├── package.json              # Dépendances et scripts
+├── package.json              # Dépendances
 ├── screens/
-│   ├── ConfigScreen.js       # Écran de configuration du minuteur
-│   └── TimerScreen.js        # Écran actif du minuteur
-├── assets/                   # Assets statiques (icônes, images)
+│   ├── ConfigScreen.js       # Écran de configuration
+│   └── TimerScreen.js        # Minuterie active
+├── assets/                   # Fichiers statiques
 └── node_modules/             # Dépendances installées
 ```
 
+---
+
 ## Améliorations futures
 
-1. **Statistiques** : Ajouter un suivi et une visualisation de l'historique d'utilisation.
-2. **Widgets** : Permettre une gestion rapide des minuteurs via des widgets sur l'écran d'accueil.
-3. **Fonctionnalités avancées de notification** : Ajouter des notifications interactives ou des rappels pour démarrer
-   une session.
+1. **Widgets** : Gestion rapide via widgets.
+2. **Statistiques** : Historique des sessions.
+3. **Notifications interactives** : Ajouter des rappels automatiques.
+
+---
 
 ## Contribution
 
-Les contributions sont les bienvenues! Pour contribuer:
+Contribuez en 3 étapes :
 
-1. Faites un fork du dépôt.
-2. Créez une nouvelle branche.
-3. Soumettez une pull request avec des informations détaillées sur vos modifications.
+1. Faites un fork.
+2. Créez une branche.
+3. Soumettez une PR avec une description claire.
+
+---
 
 ## Licence
 
-Ce projet est sous licence **MIT**.
-
+Sous licence **MIT**.
