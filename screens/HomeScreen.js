@@ -77,10 +77,12 @@ export default function HomeScreen({ navigation }) {
 											workTime: item.workTime,
 											restTime: item.restTime,
 											cycles: item.cycles,
+											sounds: item.sounds, // Ajout des sons ici
 										})
 									}
 									color={colors.prussianBlue}
 								/>
+
 							</View>
 						</View>
 					)

@@ -130,4 +130,15 @@ export const globalStyles = StyleSheet.create({
 		flex: 1,
 		marginHorizontal: 5,
 	},
+	scrollContainer: {
+		paddingBottom: 100, // Espace pour les boutons flottants
+	},
+	floatingButtons: {
+		position: 'absolute',
+		bottom: 20,
+		left: 20,
+		right: 20,
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+	},
 });

@@ -1,36 +1,59 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, IconButton } from 'react-native-paper';
-import Svg, { Circle, Text as SvgText } from 'react-native-svg';
-import { colors, globalStyles } from '../styles';
+import React, {useState, useEffect, useRef} from 'react';
+import {View, StyleSheet} from 'react-native';
+import {Audio} from 'expo-av';
+import {Text, IconButton} from 'react-native-paper';
+import Svg, {Circle, Text as SvgText} from 'react-native-svg';
+import {colors, globalStyles} from '../styles';
 
-export default function TimerScreen({ route, navigation }) {
-	const { workTime, restTime, cycles } = route.params;
+export default function TimerScreen({route, navigation}) {
+	const {workTime, restTime, cycles, sounds} = route.params;
 	const [currentCycle, setCurrentCycle] = useState(1);
 	const [timeLeft, setTimeLeft] = useState(workTime);
 	const [isWorking, setIsWorking] = useState(true);
 	const [isPaused, setIsPaused] = useState(false);
-
 	const timerRef = useRef(null);
-
-	// Calcul de la progression pour le cercle
-	const totalTime = isWorking ? workTime : restTime;
-	const progress = ((totalTime - timeLeft) / totalTime) * 100;
-
-	// Fonction pour convertir les secondes en heures, minutes, secondes
-	const formatTime = (seconds) => {
-		const hrs = Math.floor(seconds / 3600);
-		const mins = Math.floor((seconds % 3600) / 60);
-		const secs = seconds % 60;
-		return `${hrs > 0 ? `${hrs}:` : ''}${String(mins).padStart(2, '0')}:${String(secs).padStart(
-			2,
-			'0'
-		)}`;
+	// Mapper les sons définis dans la configuration aux fichiers correspondants
+	const soundMap = {
+		default: require('../assets/sounds/default.mp3'),
+		beep: require('../assets/sounds/beep.mp3'),
+		bell: require('../assets/sounds/bell.mp3'),
+		whistle: require('../assets/sounds/whistle.mp3'),
+	};
+	const playSound = async (soundKey) => {
+		if (soundKey === 'default') {
+			return; // Ignore la lecture
+		}
+		console.log(`Lecture du son : ${soundKey}`); // Debug
+		const soundFile = soundMap[soundKey] || soundMap['default']; // Utilise 'default' si le son n'existe pas
+		const sound = new Audio.Sound();
+		try {
+			await sound.loadAsync(soundFile);
+			await sound.playAsync();
+			sound.setOnPlaybackStatusUpdate((status) => {
+				if (status.didJustFinish) {
+					sound.unloadAsync();
+				}
+			});
+		} catch (error) {
+			console.error('Erreur lors de la lecture du son :', error);
+		}
 	};
 
 	useEffect(() => {
+		(async () => {
+			await playSound(sounds?.startProgram || 'default'); // Joue le son de début de programme
+		})();
+		return () => {
+			clearInterval(timerRef.current); // Nettoyage
+		};
+	}, []);
+
+	useEffect(() => {
 		if (currentCycle > cycles) {
-			navigation.goBack();
+			(async () => {
+				await playSound(sounds?.endProgram || 'default'); // Son à la fin du programme
+				navigation.goBack();
+			})();
 			return;
 		}
 
@@ -39,42 +62,42 @@ export default function TimerScreen({ route, navigation }) {
 				setTimeLeft((prev) => {
 					if (prev > 1) return prev - 1;
 
-					// Passer au prochain état
-					if (isWorking) {
-						setIsWorking(false);
-						return restTime;
-					} else {
-						setIsWorking(true);
-						setCurrentCycle((c) => c + 1);
-						return workTime;
-					}
+					(async () => {
+						// Joue le son au début de chaque transition
+						if (isWorking) {
+							await playSound(sounds?.startRest || 'default');
+							setIsWorking(false);
+							setTimeLeft(restTime);
+						} else {
+							await playSound(sounds?.startWork || 'default');
+							setIsWorking(true);
+							setCurrentCycle((c) => c + 1);
+							setTimeLeft(workTime);
+						}
+					})();
+
+					return 0; // Évite les erreurs de retour inattendues
 				});
 			}, 1000);
 		}
-
 		return () => clearInterval(timerRef.current);
 	}, [timeLeft, isPaused, isWorking]);
-
 	const handlePauseResume = () => {
 		setIsPaused((prev) => !prev);
 	};
-
 	const resetStep = () => {
 		setTimeLeft(isWorking ? workTime : restTime);
 	};
-
 	const resetProgram = () => {
 		setCurrentCycle(1);
 		setIsWorking(true);
 		setTimeLeft(workTime);
 		setIsPaused(true);
 	};
-
 	return (
 		<View style={globalStyles.container}>
 			<View style={globalStyles.progressContainer}>
 				<Svg width={200} height={200} viewBox="0 0 100 100">
-					{/* Cercle de fond */}
 					<Circle
 						cx="50"
 						cy="50"
@@ -83,7 +106,6 @@ export default function TimerScreen({ route, navigation }) {
 						strokeWidth="8"
 						fill="none"
 					/>
-					{/* Cercle de progression */}
 					<Circle
 						cx="50"
 						cy="50"
@@ -92,10 +114,9 @@ export default function TimerScreen({ route, navigation }) {
 						strokeWidth="8"
 						fill="none"
 						strokeDasharray="283"
-						strokeDashoffset={283 - (progress / 100) * 283}
+						strokeDashoffset={283 - ((workTime - timeLeft) / workTime) * 283}
 						strokeLinecap="round"
 					/>
-					{/* Temps restant */}
 					<SvgText
 						x="50%"
 						y="50%"
@@ -104,7 +125,7 @@ export default function TimerScreen({ route, navigation }) {
 						fontSize="10"
 						fill={colors.darkIcon}
 					>
-						{formatTime(timeLeft)}
+						{`${Math.floor(timeLeft / 60)}:${String(timeLeft % 60).padStart(2, '0')}`}
 					</SvgText>
 				</Svg>
 			</View>
@@ -114,7 +135,7 @@ export default function TimerScreen({ route, navigation }) {
 			</Text>
 
 			<View style={globalStyles.stageProgress}>
-				{Array.from({ length: cycles }).map((_, index) => (
+				{Array.from({length: cycles}).map((_, index) => (
 					<View
 						key={index}
 						style={[
@@ -158,3 +179,4 @@ export default function TimerScreen({ route, navigation }) {
 		</View>
 	);
 }
+const styles = StyleSheet.create({});

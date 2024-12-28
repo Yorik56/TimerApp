@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { View, ScrollView, StyleSheet } from 'react-native';
+import { TextInput, Button, Text, RadioButton } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, globalStyles } from '../styles';
 
@@ -13,12 +13,23 @@ export default function ConfigScreen({ route, navigation }) {
 	const [restSeconds, setRestSeconds] = useState(10);
 	const [cycles, setCycles] = useState(5);
 	const [programName, setProgramName] = useState('');
+	const [startWorkSound, setStartWorkSound] = useState('default');
+	const [startRestSound, setStartRestSound] = useState('default');
+	const [startProgramSound, setStartProgramSound] = useState('default');
+	const [endProgramSound, setEndProgramSound] = useState('default');
 	const [editingProgram, setEditingProgram] = useState(null);
 	const [error, setError] = useState('');
 
+	const soundOptions = [
+		{ label: 'Pas de son', value: 'default' },
+		{ label: 'Bip', value: 'beep' },
+		{ label: 'Cloche', value: 'bell' },
+		{ label: 'Sifflet', value: 'whistle' },
+	];
+
 	useEffect(() => {
 		if (route.params?.program) {
-			const { name, workTime, restTime, cycles } = route.params.program;
+			const { name, workTime, restTime, cycles, sounds } = route.params.program;
 
 			setProgramName(name);
 			setWorkHours(Math.floor(workTime / 3600));
@@ -28,6 +39,14 @@ export default function ConfigScreen({ route, navigation }) {
 			setRestMinutes(Math.floor((restTime % 3600) / 60));
 			setRestSeconds(restTime % 60);
 			setCycles(cycles);
+
+			if (sounds) {
+				setStartWorkSound(sounds.startWork || 'default');
+				setStartRestSound(sounds.startRest || 'default');
+				setStartProgramSound(sounds.startProgram || 'default');
+				setEndProgramSound(sounds.endProgram || 'default');
+			}
+
 			setEditingProgram(route.params.program);
 		}
 	}, [route.params]);
@@ -47,7 +66,18 @@ export default function ConfigScreen({ route, navigation }) {
 		const workTime = calculateTotalSeconds(workHours, workMinutes, workSeconds);
 		const restTime = calculateTotalSeconds(restHours, restMinutes, restSeconds);
 
-		const newProgram = { name: programName.trim(), workTime, restTime, cycles };
+		const newProgram = {
+			name: programName.trim(),
+			workTime,
+			restTime,
+			cycles,
+			sounds: {
+				startWork: startWorkSound,
+				startRest: startRestSound,
+				startProgram: startProgramSound,
+				endProgram: endProgramSound,
+			},
+		};
 
 		try {
 			const currentPrograms = await AsyncStorage.getItem('programs');
@@ -61,33 +91,34 @@ export default function ConfigScreen({ route, navigation }) {
 			}
 
 			await AsyncStorage.setItem('programs', JSON.stringify(programs));
-			setProgramName('');
-			setWorkHours(0);
-			setWorkMinutes(0);
-			setWorkSeconds(30);
-			setRestHours(0);
-			setRestMinutes(0);
-			setRestSeconds(10);
-			setCycles(5);
-
+			resetForm();
 			navigation.navigate('Home', { updated: true });
 		} catch (error) {
 			console.error('Erreur lors de la sauvegarde :', error);
 		}
 	};
 
-	const handleStart = () => {
-		const workTime = calculateTotalSeconds(workHours, workMinutes, workSeconds);
-		const restTime = calculateTotalSeconds(restHours, restMinutes, restSeconds);
-
-		navigation.navigate('Timer', { workTime, restTime, cycles });
+	const resetForm = () => {
+		setProgramName('');
+		setWorkHours(0);
+		setWorkMinutes(0);
+		setWorkSeconds(30);
+		setRestHours(0);
+		setRestMinutes(0);
+		setRestSeconds(10);
+		setCycles(5);
+		setStartWorkSound('default');
+		setStartRestSound('default');
+		setStartProgramSound('default');
+		setEndProgramSound('default');
 	};
 
 	return (
 		<View style={globalStyles.container}>
-			<Text style={globalStyles.title}>Configurer votre Timer</Text>
+			<ScrollView contentContainerStyle={globalStyles.scrollContainer}>
+				<Text style={globalStyles.title}>Configurer votre Timer</Text>
 
-			<View>
+				{/* Nom du programme */}
 				<TextInput
 					label="Nom du Programme"
 					mode="outlined"
@@ -102,6 +133,7 @@ export default function ConfigScreen({ route, navigation }) {
 				/>
 				{error ? <Text style={globalStyles.errorText}>{error}</Text> : null}
 
+				{/* Durée de Travail */}
 				<Text style={globalStyles.label}>Durée de Travail</Text>
 				<View style={globalStyles.durationContainer}>
 					<TextInput
@@ -130,6 +162,7 @@ export default function ConfigScreen({ route, navigation }) {
 					/>
 				</View>
 
+				{/* Durée de Pause */}
 				<Text style={globalStyles.label}>Durée de Pause</Text>
 				<View style={globalStyles.durationContainer}>
 					<TextInput
@@ -158,6 +191,7 @@ export default function ConfigScreen({ route, navigation }) {
 					/>
 				</View>
 
+				{/* Nombre de Cycles */}
 				<TextInput
 					label="Nombre de Cycles"
 					mode="outlined"
@@ -168,27 +202,86 @@ export default function ConfigScreen({ route, navigation }) {
 					style={globalStyles.input}
 				/>
 
-				<View style={globalStyles.buttonContainer}>
-					<Button
-						mode="outlined"
-						icon="content-save"
-						onPress={saveProgram}
-						style={globalStyles.button}
-						labelStyle={globalStyles.buttonText}
-					>
-						Sauvegarder
-					</Button>
-					<Button
-						mode="outlined"
-						icon="play-circle-outline"
-						onPress={handleStart}
-						style={globalStyles.button}
-						labelStyle={globalStyles.buttonText}
-					>
-						Démarrer
-					</Button>
+				{/* Gérer les Sons */}
+				<Text style={globalStyles.label}>Gérer les Sons</Text>
+				<View style={globalStyles.fieldset}>
+					{[
+						{ label: 'Début de Travail', state: startWorkSound, setState: setStartWorkSound },
+						{ label: 'Début de Repos', state: startRestSound, setState: setStartRestSound },
+						{ label: 'Début du Programme', state: startProgramSound, setState: setStartProgramSound },
+						{ label: 'Fin du Programme', state: endProgramSound, setState: setEndProgramSound },
+					].map(({ label, state, setState }) => (
+						<View key={label} style={{ marginBottom: 10 }}>
+							<Text style={globalStyles.label}>{label}</Text>
+							<RadioButton.Group
+								onValueChange={(value) => setState(value)}
+								value={state}
+							>
+								{soundOptions.map(({ label, value }) => (
+									<RadioButton.Item key={value} label={label} value={value} />
+								))}
+							</RadioButton.Group>
+						</View>
+					))}
 				</View>
+
+			</ScrollView>
+
+			{/* Boutons flottants */}
+			<View style={globalStyles.floatingButtons}>
+				<Button
+					mode="contained"
+					icon="content-save"
+					onPress={saveProgram}
+					style={globalStyles.button}
+				>
+					Sauvegarder
+				</Button>
+				<Button
+					mode="contained"
+					icon="play-circle-outline"
+					onPress={() => {
+						const workTime = calculateTotalSeconds(workHours, workMinutes, workSeconds);
+						const restTime = calculateTotalSeconds(restHours, restMinutes, restSeconds);
+						navigation.navigate('Timer', {
+							workTime,
+							restTime,
+							cycles,
+							sounds: {
+								startWork: startWorkSound,
+								startRest: startRestSound,
+								startProgram: startProgramSound,
+								endProgram: endProgramSound,
+							},
+						});
+					}}
+					style={globalStyles.button}
+				>
+					Démarrer
+				</Button>
 			</View>
 		</View>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		backgroundColor: '#fff',
+	},
+	scrollContainer: {
+		paddingBottom: 100, // Espace pour les boutons flottants
+	},
+	floatingButtons: {
+		position: 'absolute',
+		bottom: 20,
+		left: 20,
+		right: 20,
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+	},
+	button: {
+		flex: 1,
+		marginHorizontal: 5,
+	},
+});
