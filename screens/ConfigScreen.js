@@ -1,29 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
-import { Text, TextInput, Button, Card, IconButton } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { TextInput, Button, Text } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { colors, globalStyles } from '../styles';
 
-export default function ConfigScreen({ navigation }) {
+export default function ConfigScreen({ route, navigation }) {
 	const [workTime, setWorkTime] = useState(30);
 	const [restTime, setRestTime] = useState(10);
 	const [cycles, setCycles] = useState(5);
 	const [programName, setProgramName] = useState('');
-	const [savedPrograms, setSavedPrograms] = useState([]);
 	const [editingProgram, setEditingProgram] = useState(null);
 	const [error, setError] = useState('');
 
 	useEffect(() => {
-		loadPrograms();
-	}, []);
-
-	const loadPrograms = async () => {
-		try {
-			const currentPrograms = await AsyncStorage.getItem('programs');
-			setSavedPrograms(currentPrograms ? JSON.parse(currentPrograms) : []);
-		} catch (error) {
-			console.error('Erreur lors du chargement :', error);
+		if (route.params?.program) {
+			const { name, workTime, restTime, cycles } = route.params.program;
+			setProgramName(name);
+			setWorkTime(workTime);
+			setRestTime(restTime);
+			setCycles(cycles);
+			setEditingProgram(route.params.program);
 		}
-	};
+	}, [route.params]);
 
 	const saveProgram = async () => {
 		if (!programName.trim()) {
@@ -32,7 +30,6 @@ export default function ConfigScreen({ navigation }) {
 		}
 
 		setError('');
-
 		const newProgram = { name: programName.trim(), workTime, restTime, cycles };
 
 		try {
@@ -47,30 +44,14 @@ export default function ConfigScreen({ navigation }) {
 			}
 
 			await AsyncStorage.setItem('programs', JSON.stringify(programs));
-			setSavedPrograms(programs);
 			setProgramName('');
+			setWorkTime(30);
+			setRestTime(10);
+			setCycles(5);
+
+			navigation.navigate('Home', { updated: true });
 		} catch (error) {
 			console.error('Erreur lors de la sauvegarde :', error);
-		}
-	};
-
-	const editProgram = (program) => {
-		setProgramName(program.name);
-		setWorkTime(program.workTime);
-		setRestTime(program.restTime);
-		setCycles(program.cycles);
-		setEditingProgram(program);
-	};
-
-	const deleteProgram = async (programName) => {
-		try {
-			const currentPrograms = await AsyncStorage.getItem('programs');
-			const programs = currentPrograms ? JSON.parse(currentPrograms) : [];
-			const updatedPrograms = programs.filter((p) => p.name !== programName);
-			await AsyncStorage.setItem('programs', JSON.stringify(updatedPrograms));
-			setSavedPrograms(updatedPrograms);
-		} catch (error) {
-			console.error('Erreur lors de la suppression :', error);
 		}
 	};
 
@@ -79,84 +60,73 @@ export default function ConfigScreen({ navigation }) {
 	};
 
 	return (
-		<View style={styles.container}>
-			<Text style={styles.label}>Nom du Programme</Text>
-			<TextInput
-				label="Nom du Programme"
-				mode="outlined"
-				value={programName}
-				onChangeText={setProgramName}
-				error={!!error}
-			/>
-			{error ? <Text style={styles.errorText}>{error}</Text> : null}
+		<View style={globalStyles.container}>
+			<Text style={globalStyles.title}>Configurer votre Timer</Text>
 
-			<TextInput
-				label="Durée de Travail (sec)"
-				mode="outlined"
-				keyboardType="numeric"
-				value={String(workTime)}
-				onChangeText={(text) => setWorkTime(Number(text))}
-			/>
-			<TextInput
-				label="Durée de Pause (sec)"
-				mode="outlined"
-				keyboardType="numeric"
-				value={String(restTime)}
-				onChangeText={(text) => setRestTime(Number(text))}
-			/>
-			<TextInput
-				label="Nombre de Cycles"
-				mode="outlined"
-				keyboardType="numeric"
-				value={String(cycles)}
-				onChangeText={(text) => setCycles(Number(text))}
-			/>
+			<View >
+				<TextInput
+					label="Nom du Programme"
+					mode="outlined"
+					value={programName}
+					onChangeText={(text) => {
+						setProgramName(text);
+						if (error) setError('');
+					}}
+					error={!!error}
+					outlineStyle={globalStyles.outlineStyle}
+					style={globalStyles.input}
+				/>
+				{error ? <Text style={globalStyles.errorText}>{error}</Text> : null}
 
-			<Button mode="contained" onPress={saveProgram} icon="content-save">
-				{editingProgram ? 'Modifier le Programme' : 'Sauvegarder le Programme'}
-			</Button>
-			<Button mode="contained" onPress={handleStart} style={styles.button} icon="play-circle">
-				Démarrer le Timer
-			</Button>
+				<TextInput
+					label="Durée de Travail (sec)"
+					mode="outlined"
+					keyboardType="numeric"
+					value={String(workTime)}
+					onChangeText={(text) => setWorkTime(Number(text))}
+					outlineStyle={globalStyles.outlineStyle}
+					style={globalStyles.input}
+				/>
+				<TextInput
+					label="Durée de Pause (sec)"
+					mode="outlined"
+					keyboardType="numeric"
+					value={String(restTime)}
+					onChangeText={(text) => setRestTime(Number(text))}
+					outlineStyle={globalStyles.outlineStyle}
+					style={globalStyles.input}
+				/>
+				<TextInput
+					label="Nombre de Cycles"
+					mode="outlined"
+					keyboardType="numeric"
+					value={String(cycles)}
+					onChangeText={(text) => setCycles(Number(text))}
+					outlineStyle={globalStyles.outlineStyle}
+					style={globalStyles.input}
+				/>
 
-			<FlatList
-				data={savedPrograms}
-				keyExtractor={(item, index) => index.toString()}
-				renderItem={({ item }) => (
-					<Card style={styles.card}>
-						<Card.Title
-							title={item.name}
-							right={() => (
-								<>
-									<IconButton icon="pencil" onPress={() => editProgram(item)} />
-									<IconButton icon="delete" onPress={() => deleteProgram(item.name)} />
-								</>
-							)}
-						/>
-					</Card>
-				)}
-			/>
+				<View style={globalStyles.buttonContainer}>
+					<Button
+						mode="outlined"
+						icon="content-save"
+						onPress={saveProgram}
+						style={globalStyles.button}
+						labelStyle={globalStyles.buttonText}
+					>
+						Sauvegarder
+					</Button>
+					<Button
+						mode="outlined"
+						icon="play-circle-outline"
+						onPress={handleStart}
+						style={globalStyles.button}
+						labelStyle={globalStyles.buttonText}
+					>
+						Démarrer
+					</Button>
+				</View>
+			</View>
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		padding: 20,
-	},
-	label: {
-		fontSize: 16,
-		marginVertical: 10,
-	},
-	button: {
-		marginTop: 20,
-	},
-	card: {
-		marginVertical: 10,
-	},
-	errorText: {
-		color: 'red',
-		marginBottom: 10,
-	},
-});

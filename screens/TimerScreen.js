@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text, Button, IconButton, Card } from 'react-native-paper';
+import { Text, IconButton } from 'react-native-paper';
+import Svg, { Circle } from 'react-native-svg';
+import { colors, globalStyles } from '../styles';
 
 export default function TimerScreen({ route, navigation }) {
 	const { workTime, restTime, cycles } = route.params;
@@ -10,6 +12,10 @@ export default function TimerScreen({ route, navigation }) {
 	const [isPaused, setIsPaused] = useState(false);
 
 	const timerRef = useRef(null);
+
+	// Calcul de la progression pour le cercle
+	const totalTime = isWorking ? workTime : restTime;
+	const progress = ((totalTime - timeLeft) / totalTime) * 100;
 
 	useEffect(() => {
 		if (currentCycle > cycles) {
@@ -22,7 +28,7 @@ export default function TimerScreen({ route, navigation }) {
 				setTimeLeft((prev) => {
 					if (prev > 1) return prev - 1;
 
-					// Passer à la phase suivante
+					// Passer au prochain état
 					if (isWorking) {
 						setIsWorking(false);
 						return restTime;
@@ -43,53 +49,87 @@ export default function TimerScreen({ route, navigation }) {
 	};
 
 	const resetStep = () => {
-		// Réinitialise le temps de l'étape actuelle (travail ou repos)
 		setTimeLeft(isWorking ? workTime : restTime);
 	};
 
 	const resetProgram = () => {
-		// Réinitialise le programme complet
 		setCurrentCycle(1);
 		setIsWorking(true);
 		setTimeLeft(workTime);
-		setIsPaused(true); // Mettre en pause après le reset
+		setIsPaused(true);
 	};
 
 	return (
-		<View style={styles.container}>
-			<Card style={styles.card}>
-				<Card.Content>
-					<Text style={styles.title}>
-						{isWorking ? 'Travail' : 'Repos'} (Cycle {currentCycle}/{cycles})
-					</Text>
-					<Text style={styles.timer}>{timeLeft}s</Text>
-				</Card.Content>
-			</Card>
+		<View style={globalStyles.container}>
+			<View style={styles.progressContainer}>
+				<Svg width={200} height={200} viewBox="0 0 100 100">
+					<Circle
+						cx="50"
+						cy="50"
+						r="45"
+						stroke={colors.cerulean}
+						strokeWidth="8"
+						fill="none"
+					/>
+					<Circle
+						cx="50"
+						cy="50"
+						r="45"
+						stroke={colors.prussianBlue}
+						strokeWidth="8"
+						fill="none"
+						strokeDasharray="283"
+						strokeDashoffset={283 - (progress / 100) * 283}
+						strokeLinecap="round"
+					/>
+				</Svg>
+				<Text style={styles.timerText}>{timeLeft}s</Text>
+			</View>
 
-			<View style={styles.buttonContainer}>
+			<Text style={styles.stageText}>
+				{isWorking ? 'Travail' : 'Repos'} (Cycle {currentCycle}/{cycles})
+			</Text>
+
+			<View style={styles.stageProgress}>
+				{Array.from({ length: cycles }).map((_, index) => (
+					<View
+						key={index}
+						style={[
+							styles.stageDot,
+							index < currentCycle - 1 ? styles.stageDotCompleted : null,
+						]}
+					/>
+				))}
+			</View>
+
+			<View style={globalStyles.buttonContainer}>
 				<IconButton
 					icon={isPaused ? 'play' : 'pause'}
-					size={36}
+					size={35}
 					onPress={handlePauseResume}
-					style={styles.iconButton}
+					style={globalStyles.iconButton}
+					iconColor={colors.prussianBlue}
 				/>
 				<IconButton
 					icon="refresh"
-					size={36}
+					size={35}
 					onPress={resetStep}
-					style={styles.iconButton}
+					style={globalStyles.iconButton}
+					iconColor={colors.prussianBlue}
 				/>
 				<IconButton
 					icon="restart"
-					size={36}
+					size={35}
 					onPress={resetProgram}
-					style={styles.iconButton}
+					style={globalStyles.iconButton}
+					iconColor={colors.prussianBlue}
 				/>
 				<IconButton
 					icon="stop"
-					size={36}
+					size={35}
 					onPress={() => navigation.goBack()}
-					style={styles.iconButtonStop}
+					style={globalStyles.iconButton}
+					iconColor={colors.errorText}
 				/>
 			</View>
 		</View>
@@ -97,37 +137,37 @@ export default function TimerScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		justifyContent: 'center',
+	progressContainer: {
 		alignItems: 'center',
-		backgroundColor: '#f5f5f5',
+		justifyContent: 'center',
+		marginBottom: 30,
 	},
-	card: {
-		width: '90%',
-		marginBottom: 20,
-		elevation: 4,
-	},
-	title: {
-		fontSize: 24,
-		textAlign: 'center',
-		marginBottom: 10,
-	},
-	timer: {
+	timerText: {
+		position: 'absolute',
 		fontSize: 48,
 		fontWeight: 'bold',
+		color: colors.darkIcon,
+	},
+	stageText: {
 		textAlign: 'center',
+		color: colors.darkIcon,
+		fontSize: 18,
+		marginBottom: 20,
 	},
-	buttonContainer: {
+	stageProgress: {
 		flexDirection: 'row',
-		justifyContent: 'space-around',
-		width: '90%',
-		marginTop: 20,
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginBottom: 30,
 	},
-	iconButton: {
-		backgroundColor: '#6200ee',
+	stageDot: {
+		width: 15,
+		height: 15,
+		borderRadius: 15 / 2,
+		backgroundColor: colors.cerulean,
+		marginHorizontal: 5,
 	},
-	iconButtonStop: {
-		backgroundColor: '#d32f2f',
+	stageDotCompleted: {
+		backgroundColor: colors.prussianBlue,
 	},
 });
